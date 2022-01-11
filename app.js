@@ -35,7 +35,7 @@ try {
 //     console.log(data);
 // });
 
-const test_space_id = "gwangho@gmail.com";
+let test_space_id = "";
 
 let user_data;
 
@@ -59,8 +59,18 @@ socketIO.on("connection", (socket) =>{
 
         // socket.id = arg;        
         // socket.email = arg; 
+        const arg2 = JSON.parse(arg);        
+                
+       
+        //받은 정보를 깐다.
+        const user_email = arg2.user_email;
+        const room_id = arg2.room_id;
+        test_space_id = room_id;
 
+        // console.log("받은 유저 이메일"+user_email);
+        // console.log("받은 방 아이디"+test_space_id);
         
+
         
         const sql = "SELECT user_nickname, user_email, user_character_kind, user_character_cloth FROM Users WHERE user_email = ?";
 
@@ -69,7 +79,7 @@ socketIO.on("connection", (socket) =>{
 
             const query =  new Promise((resolve, reject) =>{
 
-                connnection.query(sql, arg, (err, rows, fields)=>{        
+                connnection.query(sql, user_email, (err, rows, fields)=>{        
                     if (err) console.log(err);            
                     // 소켓의 데이터에 유저의 정보를 넣어준다.
                     socket.data = rows[0];
@@ -133,7 +143,7 @@ socketIO.on("connection", (socket) =>{
     
                 // console.log("참여중인 클라이언트 "+ clientSocket.data.user_email);
                 
-                 console.log("참여중인 클라이언트 "+ JSON.stringify(clientSocket.data));
+                 console.log("참여중인 클라이언트"+ JSON.stringify(clientSocket.data));
                 // //you can do whatever you need with this
                 // clientSocket.leave('Other Room')
     
