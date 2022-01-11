@@ -106,12 +106,7 @@ socketIO.on("connection", (socket) =>{
         }
 
         
-        f();
-        
-
-        
-
-        
+        f();       
             
 
         const rooms = socketIO.sockets.adapter.rooms;
@@ -127,7 +122,7 @@ socketIO.on("connection", (socket) =>{
         // console.log("나보다 먼저 참여중인 클라이언트 숫자 : "+ numClients);
 
         if (numClients>0) {
-            const clientsNameList = new Array();
+            const clientsList = new Array();
 
             for (const clientId of clients ) {
         
@@ -137,7 +132,7 @@ socketIO.on("connection", (socket) =>{
                 console.log("먼저 참여중인 소켓");
                 // console.log(clientSocket);
                 
-                // clientsNameList.push(clientSocket.data);
+                clientsList.push(clientSocket.data);
     
                 // console.log("리스트 확인"+ clientsNameList);
     
@@ -150,6 +145,9 @@ socketIO.on("connection", (socket) =>{
                 // resolve(clientsNameList);
 
             }
+            console.log("참여중인 유저 리스트 : "+clientsList);
+            // 이미 접속해 있는 다른 캐릭터들의 정보를 클라이언트에게 던져주고 클라가 어레이를 받아서 캐릭터를 생성하자
+            socket.emit("CreateOtherUsers", clientsList);
         }        
         socket.join(test_space_id);
         
