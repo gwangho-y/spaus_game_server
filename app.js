@@ -18,36 +18,16 @@ try {
 }
 
 
-// const array = ["gwangho@gmail.com", "taehee@gmail.com"];
-
-// // /* string으로 변환 */
-
-// for (var i in array) {
-
-//     array[i] = JSON.stringify(array[i]);
-
-// }
-
-// const sql = "SELECT * FROM Users WHERE user_email IN ("+array.join()+")";
-
-// connnection.query(sql, (err, data) => {
-//     if (err) throw err;
-//     console.log(data);
-// });
 
 let test_space_id = "";
 
-let user_data;
+
 
 //클라이언트에서 connection이벤트를 보내면 최초로 실행된다.
 socketIO.on("connection", (socket) =>{
 
-    
+    let user_data;
 
-	// console.log('클라이언트와 연결되었다! \n 데이터 :'+ socket.data+"\n 아이디 : "+ socket.id);
-    
-    // let address = socket.handshake;
-    // console.log('New connection from ' + address.address + ':' + address.port);
     // emit은 클라이언트에 이벤트를 보낼 때 사용
     socket.emit('PlayerConnected');    
 
@@ -55,92 +35,61 @@ socketIO.on("connection", (socket) =>{
 
     //나의 캐릭터 쿼리해서 유니티에 던져주는 부분
     socket.on('FindMyInfo', (arg) =>{
-        // console.log("유저가 요청하는 이메일 : " + arg);
-
-        // socket.id = arg;        
-        // socket.email = arg; 
-        const arg2 = JSON.parse(arg);        
+        
+        const arg2 = JSON.parse(arg);  
                 
        
         //받은 정보를 깐다.
         const user_email = arg2.user_email;
         const room_id = arg2.room_id;
-        test_space_id = room_id;
-
-        // console.log("받은 유저 이메일"+user_email);
-        // console.log("받은 방 아이디"+test_space_id);
-        
+        test_space_id = room_id;        
 
         
         const sql = "SELECT user_nickname, user_email, user_character_kind, user_character_cloth FROM Users WHERE user_email = ?";
 
 
         async function f(){
-
             const query =  new Promise((resolve, reject) =>{
-
                 connnection.query(sql, user_email, (err, rows, fields)=>{        
                     if (err) console.log(err);            
                     // 소켓의 데이터에 유저의 정보를 넣어준다.
-                    socket.data = rows[0];
-                    // console.log(socket.data);
-    
-                    socket.emit('CreateMyCharacter', rows[0]); 
-
-                    // console.log(socket);    
+                    socket.data = rows[0];    
+                    socket.emit('CreateMyCharacter', rows[0]);                    
                     
                     resolve(socket.data);
-
-                });
-    
+                });    
             });
-
             query.then((result) => {
                 // console.log("처리된 데이터"+result.user_email);
             }).catch((err) => {
                 
-            });
-
-                       
+            });                     
 
         }
 
-        
-        f();       
-            
+        f();            
 
         const rooms = socketIO.sockets.adapter.rooms;
         // console.log(rooms);
 
-        //this is an ES6 Set of all client ids in the room
+        //지정한 방 안에 있는 유저들을 담는 리스트를 만들어준다.
         const clients = socketIO.sockets.adapter.rooms.get(test_space_id);
-
-        // console.log(clients);
-        //to get the number of clients in this room
+        
+        //clients의 사이즈를 정한다
         const numClients = clients ? clients.size : 0;
-
-        // console.log("나보다 먼저 참여중인 클라이언트 숫자 : "+ numClients);
-
+       
+        //clients의 사이즈가 0보다 클 경우 == 이미 접속해 있는 유저들이 있을 경우
         if (numClients>0) {
             const clientsList = new Array();
 
             for (const clientId of clients ) {
         
-                //this is the socket of each client in the room.
-                const clientSocket = socketIO.sockets.sockets.get(clientId);
+                //클라이언트 소켓의 정보를 할당.
+                const clientSocket = socketIO.sockets.sockets.get(clientId);  
+                clientsList.push(clientSocket.data);     
                 
-                console.log("먼저 참여중인 소켓");
-                // console.log(clientSocket);
+                console.log("참여중인 클라이언트"+ JSON.stringify(clientSocket.data));
                 
-                clientsList.push(clientSocket.data);
-    
-                // console.log("리스트 확인"+ clientsNameList);
-    
-                // console.log("참여중인 클라이언트 "+ clientSocket.data.user_email);
-                
-                 console.log("참여중인 클라이언트"+ JSON.stringify(clientSocket.data));
-                // //you can do whatever you need with this
-                // clientSocket.leave('Other Room')
     
                 // resolve(clientsNameList);
 
@@ -149,6 +98,7 @@ socketIO.on("connection", (socket) =>{
             // 이미 접속해 있는 다른 캐릭터들의 정보를 클라이언트에게 던져주고 클라가 어레이를 받아서 캐릭터를 생성하자
             socket.emit("CreateOtherUsers", clientsList);
         }        
+
         socket.join(test_space_id);
         
     });
