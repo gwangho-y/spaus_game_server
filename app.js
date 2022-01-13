@@ -23,6 +23,8 @@ let test_space_id = "";
 
 
 
+
+
 //클라이언트에서 connection이벤트를 보내면 최초로 실행된다.
 socketIO.on("connection", (socket) =>{
 
@@ -61,6 +63,42 @@ socketIO.on("connection", (socket) =>{
             });
             query.then((result) => {
                 // console.log("처리된 데이터"+result.user_email);
+
+                const room = socketIO.sockets.adapter.rooms;
+                // console.log(rooms);
+
+                //지정한 방 안에 있는 유저들을 담는 리스트를 만들어준다.
+                const clients = socketIO.sockets.adapter.rooms.get(test_space_id);
+                
+                //clients의 사이즈를 정한다
+                const numClients = clients ? clients.size : 0;
+            
+                //clients의 사이즈가 0보다 클 경우 == 이미 접속해 있는 유저들이 있을 경우
+                if (numClients>0) {
+                    const clientsList = new Array();
+
+                    for (const clientId of clients ) {
+                
+                        //클라이언트 소켓의 정보를 할당.
+                        const clientSocket = socketIO.sockets.sockets.get(clientId);  
+                        clientsList.push(clientSocket.data);     
+                        
+                        console.log("참여중인 클라이언트"+ JSON.stringify(clientSocket.data));
+                        
+            
+                        // resolve(clientsNameList);
+
+                    }
+                    console.log("참여중인 유저 리스트 : "+clientsList);
+                    // 이미 접속해 있는 다른 캐릭터들의 정보를 클라이언트에게 던져주고 클라가 어레이를 받아서 캐릭터를 생성하자
+                    socket.emit("CreateOtherUsers", clientsList);
+
+                    socket.broadcast.to(test_space_id).emit("JoinNewUser",socket.data);
+
+
+                }        
+
+                socket.join(test_space_id);
             }).catch((err) => {
                 
             });                     
@@ -69,37 +107,7 @@ socketIO.on("connection", (socket) =>{
 
         f();            
 
-        const rooms = socketIO.sockets.adapter.rooms;
-        // console.log(rooms);
-
-        //지정한 방 안에 있는 유저들을 담는 리스트를 만들어준다.
-        const clients = socketIO.sockets.adapter.rooms.get(test_space_id);
         
-        //clients의 사이즈를 정한다
-        const numClients = clients ? clients.size : 0;
-       
-        //clients의 사이즈가 0보다 클 경우 == 이미 접속해 있는 유저들이 있을 경우
-        if (numClients>0) {
-            const clientsList = new Array();
-
-            for (const clientId of clients ) {
-        
-                //클라이언트 소켓의 정보를 할당.
-                const clientSocket = socketIO.sockets.sockets.get(clientId);  
-                clientsList.push(clientSocket.data);     
-                
-                console.log("참여중인 클라이언트"+ JSON.stringify(clientSocket.data));
-                
-    
-                // resolve(clientsNameList);
-
-            }
-            console.log("참여중인 유저 리스트 : "+clientsList);
-            // 이미 접속해 있는 다른 캐릭터들의 정보를 클라이언트에게 던져주고 클라가 어레이를 받아서 캐릭터를 생성하자
-            socket.emit("CreateOtherUsers", clientsList);
-        }        
-
-        socket.join(test_space_id);
         
     });
 
